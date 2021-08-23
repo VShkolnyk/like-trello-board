@@ -63,6 +63,7 @@
 
 <script>
 import axios from 'axios'
+
 export default {
   name: 'App',
   data() {
@@ -115,11 +116,22 @@ export default {
     },
 
     async createNewList() {
-      await axios.post('http://localhost:3000/lists', this.board)
-          .then((response) => {
-            this.board.list = ''
-            this.render();
-          }).catch((e) => console.log(e))
+      if (this.board.list.length > 2) {
+        await axios.post('http://localhost:3000/lists', this.board)
+            .then((response) => {
+              this.board.list = ''
+              this.render();
+            }).catch((e) => console.log(e))
+      } else {
+        let inp = document.querySelector('.inputCreateList')
+        this.board.list = ''
+        inp.placeholder = 'To short length'
+        inp.style.border = '3px solid red'
+        setTimeout(() => {
+          inp.placeholder = 'List title'
+          inp.style.border = '1px solid black'
+        }, 2000)
+      }
     },
 
     async deleteList(idx) {
