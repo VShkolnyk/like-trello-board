@@ -62,7 +62,8 @@
 </template>
 
 <script>
-
+import axios from 'axios'
+// git commit -m "edit trello-board with node.js"
 export default {
   name: 'App',
   data() {
@@ -82,47 +83,51 @@ export default {
   },
 
   beforeMount() {
-    if (!localStorage.getItem('boards')) {
-      localStorage.setItem('boards', JSON.stringify(this.lists));
-    } else {
-      this.lists = JSON.parse(localStorage.getItem('boards'));
-    }
+    axios.get('http://localhost:3000/lists')
+        .then((response) => {
+          this.lists = response.data
+        }).catch((e) => console.log('Error', e))
   },
 
   methods: {
-    onDrop(e, idx) {
-      const cardElem = e.dataTransfer.getData('card')
-      this.lists[idx].cards.push(JSON.parse(cardElem))
-      this.saveChangingInLocalStorage()
+    async onDrop(e, idx) {
+      const cardElem = e.dataTransfer.getData('card');
+      await axios.post(`http://localhost:3000/lists/${idx}/drop`, JSON.parse(cardElem))
+          .then((res) => this.render())
+          .catch((e) => console.log(e))
     },
-    onDrag(e, index, idx) {
+    async onDrag(e, index, idx) {
       const elem = this.lists[idx].cards
       e.dataTransfer.setData('card', JSON.stringify(elem[index]))
+
+      await axios.post(`http://localhost:3000/lists/${idx}/cards/${index}/drag`, elem[index])
+          .catch((e) => console.log(e))
       setTimeout(() => {
         elem.splice(elem.indexOf(elem[index]), 1)
       }, 0)
+    },
 
+
+    async render() {
+      await axios.get('http://localhost:3000/lists')
+          .then((response) => {
+            this.lists = response.data
+          }).catch((e) => console.log('Error', e))
     },
-    createNewList() {
-      if (this.board.list.length >= 3) {
-        this.lists.push(JSON.parse(JSON.stringify(this.board)))
-        this.board.list = ''
-        this.saveChangingInLocalStorage()
-      } else {
-        let inp = document.querySelector('.inputCreateList')
-        this.board.list = ''
-        inp.placeholder = 'To short'
-        inp.style.border = '3px solid red'
-        setTimeout(() => {
-          inp.placeholder = 'List title'
-          inp.style.border = '1px solid black'
-        }, 2000)
-      }
+
+    async createNewList() {
+      await axios.post('http://localhost:3000/lists', this.board)
+          .then((response) => {
+            this.board.list = ''
+            this.render();
+          }).catch((e) => console.log(e))
     },
-    deleteList(idx) {
+
+    async deleteList(idx) {
       if (!this.lists[idx].cards.length) {
-        this.lists.splice(idx, 1)
-        this.saveChangingInLocalStorage()
+        await axios.delete(`http://localhost:3000/lists/delete/${idx}`)
+            .then((res) => this.render())
+            .catch((e) => console.log(e))
       } else {
         this.textMessage = true;
         setTimeout(() => {
@@ -130,26 +135,28 @@ export default {
         }, 3000)
       }
     },
-    createNewCard(idx) {
+
+    async createNewCard(idx) {
       if (this.card.title.length >= 1) {
         this.card.createdTime = Date.now()
-        this.lists[idx].cards.push(JSON.parse(JSON.stringify(this.card)))
-        this.card.title = ''
-        this.lists[idx].isActive = false
-        this.saveChangingInLocalStorage()
+        await axios.post(`http://localhost:3000/lists/${idx}/cards`, this.card)
+            .then((response) => {
+              this.card.title = ''
+              this.lists[idx].isActive = false
+              this.render();
+            }).catch((e) => console.log(e))
       } else {
         this.card.title = ''
         this.lists[idx].isActive = false
       }
     },
-    deleteCard(idx, index) {
-      console.log(idx)
-      this.lists[idx].cards.splice(index, 1)
-      this.saveChangingInLocalStorage()
+
+    async deleteCard(idx, index) {
+      await axios.delete(`http://localhost:3000/lists/${idx}/cards/delete/${index}`)
+          .then((res) => this.render())
+          .catch((e) => console.log(e))
     },
-    saveChangingInLocalStorage() {
-      localStorage.setItem('boards', JSON.stringify(this.lists))
-    },
+
     time(idx, index) {
       const t = (Date.now() - this.lists[idx].cards[index].createdTime) / 1000
       if (t < 60) return `${parseInt(t)} sec ago`
@@ -159,6 +166,7 @@ export default {
     },
   }
 }
+
 </script>
 
 <style lang="scss">
