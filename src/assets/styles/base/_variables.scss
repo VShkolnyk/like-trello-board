@@ -1,0 +1,29 @@
+$col: rgb(69, 118, 69);
+
+%btn {
+  button {
+    background-color: $col;
+    color: white;
+    border: none;
+    outline: none;
+    width: 70%;
+    height: 100%;
+    cursor: pointer;
+    padding: 10px;
+    border-radius: 10px;
+    &:hover {
+      background-color: rgb(94, 137, 94);
+    }
+  }
+}
+
+%formBtn {
+  background: #6f766f;
+  color: white;
+  border-radius: 6px;
+  font-weight: bold;
+  padding: 10px;
+  &:hover {
+    background-color: #343834;
+  }
+}
