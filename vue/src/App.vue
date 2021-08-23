@@ -63,7 +63,6 @@
 
 <script>
 import axios from 'axios'
-// git commit -m "edit trello-board with node.js"
 export default {
   name: 'App',
   data() {
